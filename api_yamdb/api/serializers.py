@@ -2,8 +2,9 @@ from rest_framework import serializers
 
 from reviews.models import User
 
-from .backends import JWTAuthentication
+from reviews.backends import JWTAuthentication
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -13,6 +14,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'username']
 
     def create(self, validated_data):
+        #username = validated_data.get('username')
+        #if User.objects.filter(username=username).exist():
+        #    return 1
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
@@ -27,46 +31,50 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 class AuthenticationSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=255, read_only=True)
-    username = serializers.CharField(max_length=255, read_only=True)
+    username = serializers.CharField(max_length=255)
     confirmation_code = serializers.CharField(max_length=255, write_only=True)
-    
-    def validate(self, data):
+
+    """def validate(self, data):
         username = data.get('username')
 
         if username is None:
             raise serializers.ValidationError(
                 'Username is required to log in.'
             )
-        user = User.objects.get(username=username)
-        
-        if user is None:
+        if not User.objects.filter(username=username):
             raise serializers.ValidationError(
                 'A user with this username was not found.'
             )
-
+        user = User.objects.filter(username=username)
         return {
             'username': user.username,
             'token': user.token
-        }
+        }   ."""
+    
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role', 'token']
-        #read_only_fields = ('token',)
+        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']
+        #write_only_fields = ('token',)
 
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+    #def create(self, validated_data):
+    #    return User.objects.create_user(**validated_data)
 
     def validate(self, data):
         username = data.get('username')
         email = data.get('email')
+        role = data.get('role')
 
         if username is None:
             raise serializers.ValidationError(
                 'Username is required.'
             )
         if email is None:
+            raise serializers.ValidationError(
+                'Email is required.'
+            )
+        if role is None:
             raise serializers.ValidationError(
                 'Email is required.'
             )

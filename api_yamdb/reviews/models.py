@@ -6,13 +6,14 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.conf import settings 
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from model_utils import Choices
 
 
 class UserManager(BaseUserManager):
     
-    def create_user(self, username, email, password=None, **kwargs):
+    def create_user(self, username, email, password=None, **extra_fields):
         if username is None:
             raise TypeError('Users must have a username')
         if email is None:
@@ -24,7 +25,7 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self, username, email, password, **kwargs):
+    def create_superuser(self, username, email, password, **extra_fields):
         if password is None:
             raise TypeError('Superusers must have a password.')
         user = self.create_user(username, email, password)
@@ -52,31 +53,41 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     first_name = models.CharField('First name', max_length=30, blank=True)
     last_name = models.CharField('Last name', max_length=150, blank=True)
+    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     roles = Choices('user', 'admin', 'moderator', 'superuser')
-    role = models.CharField(choices=roles, default=roles.user, max_length=20)
+    role = models.CharField(choices=roles, blank=True, max_length=20)
     bio = models.TextField('Biography', blank=True)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    #token = models.TextField('Token', blank=True)
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
     objects = UserManager()
 
     def __str__(self):
         return self.username
 
-    @property
-    def token(self):
-        return self._generate_jwt_token()
+    #@property
+    #def token(self):
+    #    return self.get_tokens_for_user()
 
-    def get_full_name(self):
-        return self.username
+    #def get_full_name(self):
+    #    return self.username
 
-    def get_short_name(self):
-        return self.username
+    #def get_short_name(self):
+    #    return self.username
 
-    def _generate_jwt_token(self):
-        dt = datetime.now() + timedelta(days=1)
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': int(dt.strftime('%S'))
-        }, settings.SECRET_KEY, algorithm='HS256')
-        return token.decode('utf-8')
+    #def _generate_jwt_token(self):
+    #    dt = datetime.now() + timedelta(days=60)
+    #    token = jwt.encode({
+    #        'id': self.pk,
+    #        'exp': dt
+    #    }, settings.SECRET_KEY, algorithm='HS256')
+    #    return token.decode('utf-8')
+
+    #def get_tokens_for_user(user):
+    #    refresh = RefreshToken.for_user(user)
+#
+    #    return {
+    #        #'refresh': str(refresh),
+    #        'access': str(refresh.access_token),
+    #    }
