@@ -17,7 +17,6 @@ class ReviewViewSet(CustomModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (AuthorOrReadOnly)
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 3
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
@@ -30,7 +29,6 @@ class CommentViewSet(CustomModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (AuthorOrReadOnly)
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 5
 
     def get_queryset(self):
         review_id = self.kwargs.get("review_id")
