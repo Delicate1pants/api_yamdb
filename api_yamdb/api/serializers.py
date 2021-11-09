@@ -11,9 +11,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'username']
 
     def create(self, validated_data):
-        # username = validated_data.get('username')
-        # if User.objects.filter(username=username).exist():
-        #     return 1
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
