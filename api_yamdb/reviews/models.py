@@ -1,5 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+User = get_user_model()
 
 
 class Genre(models.Model):
@@ -20,7 +23,10 @@ class Category(models.Model):
 
 class Titles(models.Model):
     name = models.TextField(max_length=100)
-    birth_year = models.IntegerField()
+    year = models.IntegerField()
+    rating = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
+    )
     description = models.TextField(max_length=200, null=True, blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
@@ -37,13 +43,16 @@ class Titles(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews')
+        User, on_delete=models.CASCADE, related_name='reviews'
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(10)])
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
+    )
     text = models.TextField()
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews')
+        Titles, on_delete=models.CASCADE, related_name='reviews'
+    )
 
     class Meta:
         constraints = [
@@ -56,9 +65,10 @@ class Review(models.Model):
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='comments')
+        User, on_delete=models.CASCADE, related_name='comments'
+    )
     review = models.ForeignKey(
-        Review, on_delete=models.CASCADE, related_name='comments')
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
     text = models.TextField()
-    pub_date = models.DateTimeField(
-        auto_now_add=True)
+    pub_date = models.DateTimeField(auto_now_add=True)
