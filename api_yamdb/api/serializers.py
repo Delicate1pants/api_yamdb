@@ -1,3 +1,4 @@
+from django.shortcuts import get_list_or_404
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Titles
@@ -24,6 +25,14 @@ class TitlesReadSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Titles
+
+    def get_rating(self, obj):
+        reviews = get_list_or_404(Review, title=obj.id)
+        reviews_count = len(reviews)
+        scores_summ = 0
+        for review in reviews:
+            scores_summ += review.score
+        return scores_summ // reviews_count
 
 
 class TitlesWriteSerializer(serializers.ModelSerializer):
