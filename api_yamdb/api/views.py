@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.utils import six
-from rest_framework import mixins, status, viewsets
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAuthenticated
+from .permissions import HasAccessOrReadOnly, IsAdmin
 from .serializers import (AuthenticationSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           RegistrationSerializer, ReviewSerializer,
@@ -79,25 +79,29 @@ class AuthenticationAPIView(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
+class UserList(generics.ListCreateAPIView):
     queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdmin,)
+
+    # def create(self, request, *args, **kwargs):
+    #    if request.data.get("username") is None
+    #       or request.data.get("email") is None:
+    #        return Response(status=status.HTTP_201_CREATED)
+    #    serializer = self.get_serializer(data=request.data)
+    #    serializer.is_valid(raise_exception=True)
+    #    self.perform_create(serializer)
+    #    headers = self.get_success_headers(serializer.data)
+    #    return Response(
+    #   serializer.data, status=status.HTTP_201_CREATED, headers=headers
+    # )
+
+
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     lookup_field = 'username'
-    permission_classes = (IsAuthenticated,)
-    # pagination_class = get_pagination_class()
-
-    # def get_queryset(self):
-    #    if self.kwargs.get('username') == 'me':
-    #       username = self.request.user.username
-    #    else:
-    #       username = self.kwargs.get('username')
-    #   queryset = get_object_or_404(User, username=username)
-    #   return queryset
-
-    def get_pagination_class(self):
-        if self.action == 'list':
-            return PageNumberPagination
-        return None
+    permission_classes = (IsAdmin,)
 
 
 class CustomModelViewSet(viewsets.ModelViewSet):
@@ -114,7 +118,7 @@ class CategoryViewSet(
     queryset = Category.objects.all()
     lookup_field = "slug"
     serializer_class = CategorySerializer
-    # permission_classes = []
+    permission_classes = (IsAdmin,)
     filter_backends = [SearchFilter]
     search_fields = ("name",)
 
@@ -126,7 +130,7 @@ class GenreViewSet(
     queryset = Genre.objects.all()
     lookup_field = 'slug'
     serializer_class = GenreSerializer
-    # permission_classes = []
+    permission_classes = (IsAdmin,)
     filter_backends = [SearchFilter]
     search_fields = ['=name', ]
 
@@ -134,7 +138,7 @@ class GenreViewSet(
 class TitlesViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Titles.objects.all()
-    # permission_classes = []
+    permission_classes = (IsAdmin, )
 
     def get_serializer_class(self):
         if self.request.method in ['list', 'retrieve']:
@@ -144,7 +148,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(CustomModelViewSet):
     serializer_class = ReviewSerializer
-    # permission_classes = (AuthorOrReadOnly)
+    permission_classes = (HasAccessOrReadOnly,)
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
@@ -156,7 +160,7 @@ class ReviewViewSet(CustomModelViewSet):
 
 class CommentViewSet(CustomModelViewSet):
     serializer_class = CommentSerializer
-    # permission_classes = (AuthorOrReadOnly)
+    permission_classes = (HasAccessOrReadOnly,)
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
