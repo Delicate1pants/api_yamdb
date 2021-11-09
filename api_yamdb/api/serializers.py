@@ -10,9 +10,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'username']
 
     def create(self, validated_data):
-        #username = validated_data.get('username')
-        #if User.objects.filter(username=username).exist():
-        #    return 1
         return User.objects.create_user(**validated_data)
 
     def validate(self, data):
@@ -49,13 +46,13 @@ class AuthenticationSerializer(serializers.Serializer):
     
 
 class UserSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']
-        #write_only_fields = ('token',)
+        fields = ['__all__']
 
-    #def create(self, validated_data):
-    #    return User.objects.create_user(**validated_data)
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
 
     def validate(self, data):
         username = data.get('username')

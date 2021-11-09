@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, filters
@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.tokens import PasswordResetTokenGenerator 
 from django.utils import six
+from rest_framework import generics
 
 
 
@@ -74,13 +75,28 @@ class AuthenticationAPIView(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserList(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdmin,)
+
+
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    permission_classes = (IsAdmin,)
+
+"""class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     lookup_field = 'username'
     permission_classes = (IsAuthenticated,)
     #pagination_class = get_pagination_class()
-
+    
+    @action(detail=False, url_path='recent-white-cats')
+    def 
+        permission_classes = (IsAuthenticated,)
     #def get_queryset(self):
     #    if self.kwargs.get('username') == 'me':
      #       username = self.request.user.username
@@ -93,3 +109,4 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return PageNumberPagination
         return None
+."""
