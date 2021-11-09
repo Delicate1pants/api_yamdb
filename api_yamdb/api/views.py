@@ -7,7 +7,7 @@ from rest_framework.pagination import LimitOffsetPagination, PageNumberPaginatio
 
 from reviews.models import User
 from .serializers import RegistrationSerializer, UserSerializer, AuthenticationSerializer
-from .permissions import IsAdmin, IsAuthenticated
+from .permissions import IsAdmin
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
