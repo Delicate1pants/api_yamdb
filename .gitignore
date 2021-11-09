@@ -149,5 +149,5 @@ dmypy.json
 media/
 
 # папки веток, из которого берутся файлы для ручного мерджа при конфликатах
-**/titles_control
-**/user_control
+**/titles_control/v1
+**/user_control/v1
