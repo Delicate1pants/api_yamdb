@@ -41,6 +41,7 @@ class GenreViewSet(
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Titles.objects.all()
     # permission_classes = []
 
