@@ -2,10 +2,6 @@ from rest_framework import serializers
 
 from reviews.models import User
 
-from reviews.backends import JWTAuthentication
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-
 
 class RegistrationSerializer(serializers.ModelSerializer):
     """ Сериализация регистрации пользователя и создания нового. """
@@ -75,9 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
                 'Email is required.'
             )
         if role is None:
-            raise serializers.ValidationError(
-                'Email is required.'
-            )
+            data.role = 'user'
         return data
 
     
