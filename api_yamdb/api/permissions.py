@@ -2,28 +2,34 @@
 from rest_framework import permissions
 
 
-class IsAdmin(permissions.BasePermission):
-    
+class IsOwnerOrStaff(permissions.BasePermission):
+
     def has_permission(self, request, view):
-        
-        if request.method == 'GET' and request.user.is_authenticated and view.kwargs.get('username', None) == 'me':
+        if not request.user.is_authenticated:
+            return False
+        user = request.user
+        role = user.role
+        if role in ['admin', 'moderator'] or user.is_superuser:
             return True
-
-        if request.method == 'PATCH' and request.user.is_authenticated and request.user.role == 'user' and view.kwargs.get('username', None) == 'me':
+        if request.method in ['GET', 'PATCH'] and role == 'user':
             return True
-        
-        is_admin = request.user.is_authenticated and (request.user.role == 'admin' or request.user.is_staff or request.user.is_superuser)
-        return is_admin
+        return False
 
     def has_object_permission(self, request, view, obj):
-        is_admin = request.user.is_authenticated and (request.user.role == 'admin' or request.user.is_staff or request.user.is_superuser)
-        if request.method == 'PATCH' and request.user.role == 'user' and view.kwargs.get('username', None) == 'me':
+        role = request.user.role
+        if role == 'admin' or request.user.is_superuser:
             return True
-        return is_admin
+        return obj == request.user
 
-class IsOwner(permissions.BasePermission):
-    
+
+class IsAdmin(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            if request.user.role == 'admin' or request.user.is_superuser:
+                return True
+
     def has_object_permission(self, request, view, obj):
-        if request.method == 'PATCH' and request.user.role == 'user' and view.kwargs.get('username', None) == 'me':
+        if request.user.role == 'admin' or request.user.is_superuser:
             return True
-        return request.user.is_authenticated or obj == request.user
+        return False

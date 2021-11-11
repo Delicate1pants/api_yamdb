@@ -1,11 +1,14 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.db import models
-from django.conf import settings 
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin
+)
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.db import models
 
 
 class UserManager(BaseUserManager):
-    
+
     def create_user(self, username, email, password=None, **extra_fields):
         if username is None:
             raise TypeError('Users must have a username')
@@ -34,15 +37,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         db_index=True,
         max_length=150,
         unique=True,
-        help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.',
+        help_text='Required. 150 characters or few. let., dig. and @/./+/-/_',
         validators=[username_validator],
-        error_messages={'unique': "A user with that username already exists",}
+        error_messages={'unique': "A user with that username already exists", }
     )
     email = models.EmailField(
         db_index=True,
         max_length=254,
         unique=True,
-        error_messages={'unique': "A user with that email already exists",}
+        error_messages={'unique': "A user with that email already exists", }
     )
     first_name = models.CharField('First name', max_length=30, blank=True)
     last_name = models.CharField('Last name', max_length=150, blank=True)
