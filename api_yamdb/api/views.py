@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, filters
@@ -7,14 +7,15 @@ from rest_framework.pagination import LimitOffsetPagination, PageNumberPaginatio
 
 from reviews.models import User
 from .serializers import RegistrationSerializer, UserSerializer, AuthenticationSerializer
-from .permissions import IsAdmin
-
+from .permissions import IsAdmin, IsOwner
+from rest_framework.generics import RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.tokens import PasswordResetTokenGenerator 
 from django.utils import six
 from rest_framework import generics
+#from rest_framework.decorators import api_view
 
 
 
@@ -80,42 +81,26 @@ class UserList(generics.ListCreateAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
 
-    #def create(self, request, *args, **kwargs):
-    #    if request.data.get("username") is None or request.data.get("email") is None:
-    #        return Response(status=status.HTTP_201_CREATED)
-    #    serializer = self.get_serializer(data=request.data)
-    #    serializer.is_valid(raise_exception=True)
-    #    self.perform_create(serializer)
-    #    headers = self.get_success_headers(serializer.data)
-    #    return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+class UserDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
     permission_classes = (IsAdmin,)
 
-"""class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-    lookup_field = 'username'
-    permission_classes = (IsAuthenticated,)
-    #pagination_class = get_pagination_class()
-    
-    @action(detail=False, url_path='recent-white-cats')
-    def 
-        permission_classes = (IsAuthenticated,)
-    #def get_queryset(self):
-    #    if self.kwargs.get('username') == 'me':
-     #       username = self.request.user.username
-    #    else:
-     #       username = self.kwargs.get('username')
-     #   queryset = get_object_or_404(User, username=username)
-     #   return queryset
 
-    def get_pagination_class(self):
-        if self.action == 'list':
-            return PageNumberPagination
-        return None
-."""
+    def get_object(self):
+        if self.kwargs.get('username', None) == 'me':
+            self.kwargs['username'] = self.request.user.username
+        return super(UserDetailAPIView, self).get_object()
+
+
+    def update(self, request, *args, **kwargs):
+        serializer_data = request.data
+        serializer = self.serializer_class(
+            request.user, data=serializer_data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

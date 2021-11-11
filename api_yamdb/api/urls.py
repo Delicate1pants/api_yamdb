@@ -1,11 +1,10 @@
 from django.urls import include, path
 
-from .views import RegistrationAPIView, AuthenticationAPIView
+from .views import RegistrationAPIView, AuthenticationAPIView, UserList, UserDetailAPIView
 #from rest_framework import routers
-from rest_framework_simplejwt.views import TokenVerifyView
+#from rest_framework_simplejwt.views import TokenVerifyView
 
-from . import views
-from .views import UserList, UserDetail
+#from . import views
 
 app_name = 'api'
 
@@ -17,6 +16,7 @@ urlpatterns = [
     path('v1/auth/signup/', RegistrationAPIView.as_view()),
     path('v1/auth/token/', AuthenticationAPIView.as_view()),
     path('v1/users/', UserList.as_view()),
-    path('v1/users/<str:username>/', UserDetail.as_view()),
-    path('v1/auth/token-verify/', TokenVerifyView.as_view()),
+    path('v1/users/<str:username>/', UserDetailAPIView.as_view()),
+    path('v1/users/me/', UserDetailAPIView.as_view(), kwargs={'username': 'me'}),
+    #path('v1/users/me/', UserselfAPIView.as_view()),
 ]
