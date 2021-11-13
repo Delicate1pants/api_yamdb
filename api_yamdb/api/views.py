@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Permission
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -10,13 +11,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAuthenticated
+from .permissions import IsAdmin, IsAuthenticated
 from .serializers import (AuthenticationSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           RegistrationSerializer, ReviewSerializer,
                           TitlesReadSerializer, TitlesWriteSerializer,
                           UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Titles, User
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TitleFilter
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -112,9 +115,10 @@ class CategoryViewSet(
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     queryset = Category.objects.all()
+    pagination_class = PageNumberPagination
     lookup_field = "slug"
     serializer_class = CategorySerializer
-    # permission_classes = []
+    permission_classes = (IsAdmin,)
     filter_backends = [SearchFilter]
     search_fields = ("name",)
 
@@ -124,23 +128,25 @@ class GenreViewSet(
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     queryset = Genre.objects.all()
+    pagination_class = PageNumberPagination
     lookup_field = 'slug'
     serializer_class = GenreSerializer
-    # permission_classes = []
+    permission_classes = (IsAdmin,)
     filter_backends = [SearchFilter]
     search_fields = ['=name', ]
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Titles.objects.all()
-    # permission_classes = []
-
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAdmin, )
+    
     def get_serializer_class(self):
-        if self.request.method in ['list', 'retrieve']:
+        if self.request.method in Permission.SAFE_METHODS:
             return TitlesReadSerializer
         return TitlesWriteSerializer
-
 
 class ReviewViewSet(CustomModelViewSet):
     serializer_class = ReviewSerializer

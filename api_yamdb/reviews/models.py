@@ -84,7 +84,7 @@ class Titles(models.Model):
     name = models.TextField(max_length=100)
     year = models.IntegerField()
     rating = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(10)]
+        validators=[MinValueValidator(0), MaxValueValidator(10)], null=True
     )
     description = models.TextField(max_length=200, null=True, blank=True)
     genre = models.ManyToManyField(Genre)
