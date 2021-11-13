@@ -4,12 +4,12 @@ from rest_framework_simplejwt.views import TokenVerifyView
 
 from .views import (AuthenticationAPIView, CategoryViewSet, CommentViewSet,
                     GenreViewSet, RegistrationAPIView, ReviewViewSet,
-                    TitlesViewSet, UserDetail, UserList)
+                    TitleViewSet, UserDetail, UserList)
 
 router = routers.SimpleRouter()
 router.register(r'genres', GenreViewSet, basename='genres')
 router.register(r'categories', CategoryViewSet, basename='categories')
-router.register(r'titles', TitlesViewSet, basename='titles')
+router.register(r'titles', TitleViewSet, basename='titles')
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet, basename='reviews'
