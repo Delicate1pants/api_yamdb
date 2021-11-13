@@ -14,9 +14,9 @@ from .permissions import HasAccessOrReadOnly, IsAdmin
 from .serializers import (AuthenticationSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           RegistrationSerializer, ReviewSerializer,
-                          TitlesReadSerializer, TitlesWriteSerializer,
+                          TitleReadSerializer, TitleWriteSerializer,
                           UserSerializer)
-from reviews.models import Category, Comment, Genre, Review, Titles, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -137,13 +137,13 @@ class GenreViewSet(
 
 class TitlesViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     permission_classes = (IsAdmin, )
 
     def get_serializer_class(self):
         if self.request.method in ['list', 'retrieve']:
-            return TitlesReadSerializer
-        return TitlesWriteSerializer
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class ReviewViewSet(CustomModelViewSet):
@@ -153,7 +153,7 @@ class ReviewViewSet(CustomModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
-        get_object_or_404(Titles, pk=title_id)
+        get_object_or_404(Title, pk=title_id)
         new_queryset = Review.objects.filter(title=title_id)
         return new_queryset
 

@@ -80,7 +80,7 @@ class Category(models.Model):
         return self.slug
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.TextField(max_length=100)
     year = models.IntegerField()
     rating = models.IntegerField(
@@ -110,7 +110,7 @@ class Review(models.Model):
     )
     text = models.TextField()
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews'
+        Title, on_delete=models.CASCADE, related_name='reviews'
     )
 
     class Meta:
