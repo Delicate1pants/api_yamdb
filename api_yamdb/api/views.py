@@ -2,7 +2,8 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.utils import six
-from rest_framework import generics, mixins, status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, mixins, permissions, status, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -10,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .filters import TitleFilter
 from .permissions import HasAccessOrReadOnly, IsAdmin
 from .serializers import (AuthenticationSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
@@ -116,6 +118,7 @@ class CategoryViewSet(
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     queryset = Category.objects.all()
+    pagination_class = PageNumberPagination
     lookup_field = "slug"
     serializer_class = CategorySerializer
     permission_classes = (IsAdmin,)
@@ -128,6 +131,7 @@ class GenreViewSet(
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     queryset = Genre.objects.all()
+    pagination_class = PageNumberPagination
     lookup_field = 'slug'
     serializer_class = GenreSerializer
     permission_classes = (IsAdmin,)
@@ -135,13 +139,15 @@ class GenreViewSet(
     search_fields = ['=name', ]
 
 
-class TitlesViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'patch', 'delete']
+class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+    pagination_class = PageNumberPagination
     permission_classes = (IsAdmin, )
 
     def get_serializer_class(self):
-        if self.request.method in ['list', 'retrieve']:
+        if self.request.method in permissions.SAFE_METHODS:
             return TitleReadSerializer
         return TitleWriteSerializer
 
