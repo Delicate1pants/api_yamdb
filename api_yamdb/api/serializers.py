@@ -1,7 +1,7 @@
 from django.shortcuts import get_list_or_404
 from rest_framework import serializers
 
-from reviews.models import Category, Comment, Genre, Review, Titles, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -89,13 +89,13 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-class TitlesReadSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
 
     class Meta:
         fields = '__all__'
-        model = Titles
+        model = Title
 
     def get_rating(self, obj):
         reviews = get_list_or_404(Review, title=obj.id)
@@ -106,7 +106,7 @@ class TitlesReadSerializer(serializers.ModelSerializer):
         return scores_summ // reviews_count
 
 
-class TitlesWriteSerializer(serializers.ModelSerializer):
+class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(), slug_field='slug', many=True
     )
@@ -124,7 +124,7 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Titles
+        model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
