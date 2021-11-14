@@ -138,7 +138,10 @@ class CustomTitle(fields.CurrentUserDefault):
         try:
             title = Title.objects.get(pk=title_id)
         except ObjectDoesNotExist:
-            raise serializers.ValidationError('Введите корректный title')
+            raise Http404(
+                'Объект не найден. '
+                'Проверьте правильность написания PATH PARAMETER: review_id'
+            )
         return title
 
 
@@ -157,13 +160,17 @@ class CustomReview(CustomTitle):
         try:
             review = Review.objects.get(pk=review_id)
         except ObjectDoesNotExist:
-            raise serializers.ValidationError('Введите корректный review')
+            raise Http404(
+                'Объект не найден. '
+                'Проверьте правильность написания PATH PARAMETER: review_id'
+            )
         return review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
     title = serializers.HiddenField(default=CustomTitle())
 
@@ -181,17 +188,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = '__all__'
         read_only_fields = ('id', 'author', 'pub_date')
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Review.objects.all(),
-        #         fields=['author', 'title']
-        #     )
-        # ]
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=['author', 'title']
+            )
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
     review = serializers.HiddenField(default=CustomReview())
 
