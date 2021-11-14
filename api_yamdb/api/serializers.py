@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.shortcuts import get_list_or_404
 from rest_framework import fields, serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -141,12 +142,18 @@ class CustomTitle(fields.CurrentUserDefault):
         return title
 
 
-class CustomReview(fields.CurrentUserDefault):
-    requires_context = True
-
+class CustomReview(CustomTitle):
     def __call__(self, serializer_field):
         view = serializer_field.context.get('view')
+        title_id = view.kwargs.get('title_id')
         review_id = view.kwargs.get('review_id')
+        try:
+            Title.objects.get(pk=title_id)
+        except ObjectDoesNotExist:
+            raise Http404(
+                'Объект не найден. '
+                'Проверьте правильность написания PATH PARAMETER: title_id'
+            )
         try:
             review = Review.objects.get(pk=review_id)
         except ObjectDoesNotExist:

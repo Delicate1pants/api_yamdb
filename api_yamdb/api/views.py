@@ -170,7 +170,9 @@ class CommentViewSet(CustomModelViewSet):
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
-        get_object_or_404(Review, pk=review_id)
+        if not title_id or not review_id:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         new_queryset = Comment.objects.filter(review=review_id)
         return new_queryset
