@@ -128,23 +128,34 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         model = Title
 
 
-# class TitleDefault(fields.CurrentUserDefault):
-#     requires_context = True
+# class TitleDefault(fields.HiddenField):
+#     def __init__(self, **kwargs):
+#         kwargs['write_only'] = True
+#         kwargs['requires_context'] = True
+#         super().__init__(**kwargs)
 
-#     def __call__(self, serializer_field):
-#         title_id = serializer_field.context.get('view').kwargs.get('title_id')
-#         try:
-#             title = Title.objects.get(pk=title_id)
-#         except ObjectDoesNotExist:
-#             raise serializers.ValidationError('Введите корректный title')
-#         return title
+#     def to_internal_value(self, data):
+#         return data
+
+
+class TitleDefault(fields.CurrentUserDefault):
+    requires_context = True
+
+    def __call__(self, serializer_field):
+        title_id = serializer_field.context.get('view').kwargs.get('title_id')
+        try:
+            title = Title.objects.get(pk=title_id)
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError('Введите корректный title')
+        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-    # title = serializers.HiddenField(default=TitleDefault())
+    # title = TitleDefault()
+    title = serializers.HiddenField(default=TitleDefault())
 
     # def get_title(self, obj):
     #     title_id = self.context.get('view').kwargs.get('title_id')
@@ -164,17 +175,17 @@ class ReviewSerializer(serializers.ModelSerializer):
     #         )
     #     return data
 
-    def create(self, validated_data):
-        title_id = self.context.get('view').kwargs.get('title_id')
-        try:
-            validated_data['title'] = Title.objects.get(pk=title_id)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError('Заполните поле title')
-        return Review.objects.create(**validated_data)
+    # def create(self, validated_data):
+    #     title_id = self.context.get('view').kwargs.get('title_id')
+    #     try:
+    #         validated_data['title'] = Title.objects.get(pk=title_id)
+    #     except ObjectDoesNotExist:
+    #         raise serializers.ValidationError('Заполните поле title')
+    #     return Review.objects.create(**validated_data)
 
     class Meta:
         model = Review
-        exclude = ('title',)
+        fields = '__all__'
         read_only_fields = ('id', 'author', 'pub_date')
         # validators = [
         #     UniqueTogetherValidator(
