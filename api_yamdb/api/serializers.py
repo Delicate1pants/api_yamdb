@@ -94,17 +94,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(author__reviews__title=obj)
-        if not reviews:
-            return None
-        reviews_count = len(reviews)
-        scores_summ = 0
-        for review in reviews:
-            scores_summ += review.score
-        return round(scores_summ / reviews_count)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -118,17 +108,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field='slug'
     )
-    rating = serializers.SerializerMethodField()
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(author__reviews__title=obj)
-        if not reviews:
-            return None
-        reviews_count = len(reviews)
-        scores_summ = 0
-        for review in reviews:
-            scores_summ += review.score
-        return round(scores_summ / reviews_count)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -179,16 +159,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
     title = serializers.HiddenField(default=CustomTitle())
-
-    # def validate(self, data):
-    #     already_related = Review.objects.filter(
-    #         author=data['author'], title=data['title']
-    #     ).exists()
-    #     if already_related:
-    #         raise serializers.ValidationError(
-    #             'Отзыв на это произведение уже существует'
-    #         )
-    #     return data
 
     class Meta:
         model = Review

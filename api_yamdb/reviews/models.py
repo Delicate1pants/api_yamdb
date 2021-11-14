@@ -83,9 +83,6 @@ class Category(models.Model):
 class Title(models.Model):
     name = models.TextField(max_length=100)
     year = models.IntegerField()
-    rating = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)], null=True
-    )
     description = models.TextField(max_length=200, null=True, blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
@@ -102,7 +99,7 @@ class Title(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='reviewer'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField(
