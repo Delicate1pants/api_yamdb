@@ -106,13 +106,6 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAdmin,)
 
 
-class CustomModelViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'patch', 'delete']
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-
 class CategoryViewSet(
     mixins.ListModelMixin, mixins.CreateModelMixin,
     mixins.DestroyModelMixin, viewsets.GenericViewSet
@@ -150,6 +143,13 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleReadSerializer
         return TitleWriteSerializer
+
+
+class CustomModelViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class ReviewViewSet(CustomModelViewSet):

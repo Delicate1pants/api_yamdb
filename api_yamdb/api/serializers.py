@@ -1,5 +1,7 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_list_or_404
-from rest_framework import serializers
+from rest_framework import fields, serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
@@ -126,36 +128,73 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         model = Title
 
 
+# class TitleDefault(fields.CurrentUserDefault):
+#     requires_context = True
+
+#     def __call__(self, serializer_field):
+#         title_id = serializer_field.context.get('view').kwargs.get('title_id')
+#         try:
+#             title = Title.objects.get(pk=title_id)
+#         except ObjectDoesNotExist:
+#             raise serializers.ValidationError('Введите корректный title')
+#         return title
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-    score = serializers.IntegerField(
-        min_value=1, max_value=10, allow_null=False
-    )
 
-    # def validate_score(self, value):
-    #     if value is None:
+    # def get_title(self, obj):
+    #     title_id = self.context.get('view').kwargs.get('title_id')
+    #     try:
+    #         title = Title.objects.get(pk=title_id)
+    #     except ObjectDoesNotExist:
+    #         raise serializers.ValidationError('Введите корректный title')
+    #     return title
+
+    # def validate(self, data):
+    #     already_related = Review.objects.filter(
+    #         author=data['author'], title=data['title']
+    #     ).exists()
+    #     if already_related:
     #         raise serializers.ValidationError(
-    #             'Укажите score от 1 до 10 - оценку произведению'
+    #             'Отзыв на это произведение уже существует'
     #         )
-    #     return value
+    #     return data
 
     def create(self, validated_data):
-        title_id = self.context.get('view').kwargs.get('trip_id')
-        validated_data['title'] = Review.objects.create(pk=title_id)
+        title_id = self.context.get('view').kwargs.get('title_id')
+        try:
+            validated_data['title'] = Title.objects.get(pk=title_id)
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError('Заполните поле title')
         return Review.objects.create(**validated_data)
 
     class Meta:
         model = Review
         exclude = ('title',)
-        read_only_fields = ('id', 'author', 'pub_date', 'title')
+        read_only_fields = ('id', 'author', 'pub_date')
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Review.objects.all(),
+        #         fields=['author', 'title']
+        #     )
+        # ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
+
+    def create(self, validated_data):
+        review_id = self.context.get('view').kwargs.get('review_id')
+        try:
+            validated_data['review'] = Review.objects.get(pk=review_id)
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError('Введите корректный review')
+        return Review.objects.create(**validated_data)
 
     class Meta:
         model = Comment
