@@ -4,7 +4,8 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils import six
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -13,11 +14,12 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
-from .permissions import HasAccessOrReadOnly, IsAdmin
+from .permissions import HasAccessOrReadOnly, IsAdmin, IsOwnerOrStaff
 from .serializers import (AuthenticationSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           RegistrationSerializer, ReviewSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
+                          UserpatchSerializer, UserpostSerializer,
                           UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
@@ -26,7 +28,6 @@ class TokenGenerator(PasswordResetTokenGenerator):
     def _make_hash_value(self, user, timestamp):
         return (
             six.text_type(user.pk) + six.text_type(timestamp)
-            + six.text_type(user.is_active)
         )
 
 
@@ -53,7 +54,6 @@ class RegistrationAPIView(APIView):
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
             resp = Response(request.data, status=status.HTTP_200_OK)
-        print(user)
         confirmation_code = account_activation_token.make_token(user)
         send_mail(
             'Confirmation code',
@@ -82,29 +82,30 @@ class AuthenticationAPIView(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserList(generics.ListCreateAPIView):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsAdmin,)
-
-    # def create(self, request, *args, **kwargs):
-    #    if request.data.get("username") is None
-    #       or request.data.get("email") is None:
-    #        return Response(status=status.HTTP_201_CREATED)
-    #    serializer = self.get_serializer(data=request.data)
-    #    serializer.is_valid(raise_exception=True)
-    #    self.perform_create(serializer)
-    #    headers = self.get_success_headers(serializer.data)
-    #    return Response(
-    #   serializer.data, status=status.HTTP_201_CREATED, headers=headers
-    # )
-
-
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
     lookup_field = 'username'
     permission_classes = (IsAdmin,)
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserpostSerializer
+        return UserSerializer
+
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        permission_classes=[IsOwnerOrStaff]
+    )
+    def me(self, request):
+        self.kwargs['username'] = request.user.username
+        self.get_serializer = UserpatchSerializer
+        if request.method == 'GET':
+            return self.retrieve(request)
+        elif request.method == 'PATCH':
+            return self.partial_update(request)
+        else:
+            raise Exception('Not implemented')
 
 
 class CategoryViewSet(

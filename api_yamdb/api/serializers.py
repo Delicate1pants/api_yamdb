@@ -7,7 +7,7 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    """ Сериализация регистрации пользователя и создания нового. """
+
     class Meta:
         model = User
         fields = ['email', 'username']
@@ -17,7 +17,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         username = data.get('username')
-
         if username == 'me':
             raise serializers.ValidationError(
                 'Username must not be me'
@@ -30,51 +29,43 @@ class AuthenticationSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=255)
     confirmation_code = serializers.CharField(max_length=255, write_only=True)
 
-    """def validate(self, data):
-        username = data.get('username')
-
-        if username is None:
-            raise serializers.ValidationError(
-                'Username is required to log in.'
-            )
-        if not User.objects.filter(username=username):
-            raise serializers.ValidationError(
-                'A user with this username was not found.'
-            )
-        user = User.objects.filter(username=username)
-        return {
-            'username': user.username,
-            'token': user.token
-        }   ."""
-
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(
+        choices=['admin', 'moderator', 'user'],
+        required=False
+    )
+
     class Meta:
         model = User
         fields = [
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         ]
-        # write_only_fields = ('token',)
 
-    # def create(self, validated_data):
-    #     return User.objects.create_user(**validated_data)
+
+class UserpostSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        ]
 
     def validate(self, data):
-        username = data.get('username')
-        email = data.get('email')
         role = data.get('role')
-
-        if username is None:
-            raise serializers.ValidationError(
-                'Username is required.'
-            )
-        if email is None:
-            raise serializers.ValidationError(
-                'Email is required.'
-            )
         if role is None:
-            data.role = 'user'
+            data["role"] = 'user'
         return data
+
+
+class UserpatchSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(max_length=255, read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        ]
 
 
 class CategorySerializer(serializers.ModelSerializer):
