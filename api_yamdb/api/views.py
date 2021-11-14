@@ -14,7 +14,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
-from .permissions import HasAccessOrReadOnly, IsAdmin, IsOwnerOrStaff
+from .permissions import (HasAccessOrReadOnly, IsAdmin, IsAdminOrReadOnly,
+                          IsOwnerOrStaff)
 from .serializers import (AuthenticationSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           RegistrationSerializer, ReviewSerializer,
@@ -116,7 +117,7 @@ class CategoryViewSet(
     pagination_class = PageNumberPagination
     lookup_field = "slug"
     serializer_class = CategorySerializer
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [SearchFilter]
     search_fields = ("name",)
 
@@ -129,7 +130,7 @@ class GenreViewSet(
     pagination_class = PageNumberPagination
     lookup_field = 'slug'
     serializer_class = GenreSerializer
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [SearchFilter]
     search_fields = ['=name', ]
 
@@ -139,7 +140,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     pagination_class = PageNumberPagination
-    permission_classes = (IsAdmin, )
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
