@@ -1,6 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
-from django.shortcuts import get_list_or_404
 from rest_framework import fields, serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -92,25 +91,24 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-def custom_get_rating(self, obj):
-    reviews = get_list_or_404(Review, title=obj.id)
-    reviews_count = len(reviews)
-    scores_summ = 0
-    for review in reviews:
-        scores_summ += review.score
-    return scores_summ // reviews_count
-
-
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, obj):
+        reviews = Review.objects.filter(author__reviews__title=obj)
+        if not reviews:
+            return None
+        reviews_count = len(reviews)
+        scores_summ = 0
+        for review in reviews:
+            scores_summ += review.score
+        return round(scores_summ / reviews_count)
 
     class Meta:
         fields = '__all__'
         model = Title
-
-    def get_rating(self, obj):
-        custom_get_rating(self, obj)
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -120,9 +118,17 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field='slug'
     )
+    rating = serializers.SerializerMethodField()
 
     def get_rating(self, obj):
-        custom_get_rating(self, obj)
+        reviews = Review.objects.filter(author__reviews__title=obj)
+        if not reviews:
+            return None
+        reviews_count = len(reviews)
+        scores_summ = 0
+        for review in reviews:
+            scores_summ += review.score
+        return round(scores_summ / reviews_count)
 
     class Meta:
         fields = '__all__'
