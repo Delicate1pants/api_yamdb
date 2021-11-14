@@ -144,6 +144,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
+    # title = serializers.HiddenField(default=TitleDefault())
 
     # def get_title(self, obj):
     #     title_id = self.context.get('view').kwargs.get('title_id')
@@ -191,10 +192,10 @@ class CommentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         review_id = self.context.get('view').kwargs.get('review_id')
         try:
-            validated_data['review'] = Review.objects.get(pk=review_id)
+            validated_data['review'] = Comment.objects.get(pk=review_id)
         except ObjectDoesNotExist:
             raise serializers.ValidationError('Введите корректный review')
-        return Review.objects.create(**validated_data)
+        return Comment.objects.create(**validated_data)
 
     class Meta:
         model = Comment
