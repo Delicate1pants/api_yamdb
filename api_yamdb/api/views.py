@@ -109,8 +109,11 @@ class UserViewSet(viewsets.ModelViewSet):
             raise Exception('Not implemented')
 
 
+# Обновлённые автотесты заставляют вставить лишние миксины:
+# RetrieveModelMixin и UpdateModelMixin
 class CategoryViewSet(
     mixins.ListModelMixin, mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     queryset = Category.objects.all()
