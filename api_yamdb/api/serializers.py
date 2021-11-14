@@ -6,15 +6,6 @@ from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
-def custom_get_rating(self, obj):
-    reviews = get_list_or_404(Review, title=obj.id)
-    reviews_count = len(reviews)
-    scores_summ = 0
-    for review in reviews:
-        scores_summ += review.score
-    return scores_summ // reviews_count
-
-
 class RegistrationSerializer(serializers.ModelSerializer):
     """ Сериализация регистрации пользователя и создания нового. """
     class Meta:
@@ -100,6 +91,15 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
+def custom_get_rating(self, obj):
+    reviews = get_list_or_404(Review, title=obj.id)
+    reviews_count = len(reviews)
+    scores_summ = 0
+    for review in reviews:
+        scores_summ += review.score
+    return scores_summ // reviews_count
+
+
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
@@ -128,21 +128,12 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         model = Title
 
 
-# class TitleDefault(fields.HiddenField):
-#     def __init__(self, **kwargs):
-#         kwargs['write_only'] = True
-#         kwargs['requires_context'] = True
-#         super().__init__(**kwargs)
-
-#     def to_internal_value(self, data):
-#         return data
-
-
-class TitleDefault(fields.CurrentUserDefault):
+class CustomTitle(fields.CurrentUserDefault):
     requires_context = True
 
     def __call__(self, serializer_field):
-        title_id = serializer_field.context.get('view').kwargs.get('title_id')
+        view = serializer_field.context.get('view')
+        title_id = view.kwargs.get('title_id')
         try:
             title = Title.objects.get(pk=title_id)
         except ObjectDoesNotExist:
@@ -150,20 +141,24 @@ class TitleDefault(fields.CurrentUserDefault):
         return title
 
 
+class CustomReview(fields.CurrentUserDefault):
+    requires_context = True
+
+    def __call__(self, serializer_field):
+        view = serializer_field.context.get('view')
+        review_id = view.kwargs.get('review_id')
+        try:
+            review = Review.objects.get(pk=review_id)
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError('Введите корректный review')
+        return review
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-    # title = TitleDefault()
-    title = serializers.HiddenField(default=TitleDefault())
-
-    # def get_title(self, obj):
-    #     title_id = self.context.get('view').kwargs.get('title_id')
-    #     try:
-    #         title = Title.objects.get(pk=title_id)
-    #     except ObjectDoesNotExist:
-    #         raise serializers.ValidationError('Введите корректный title')
-    #     return title
+    title = serializers.HiddenField(default=CustomTitle())
 
     # def validate(self, data):
     #     already_related = Review.objects.filter(
@@ -174,14 +169,6 @@ class ReviewSerializer(serializers.ModelSerializer):
     #             'Отзыв на это произведение уже существует'
     #         )
     #     return data
-
-    # def create(self, validated_data):
-    #     title_id = self.context.get('view').kwargs.get('title_id')
-    #     try:
-    #         validated_data['title'] = Title.objects.get(pk=title_id)
-    #     except ObjectDoesNotExist:
-    #         raise serializers.ValidationError('Заполните поле title')
-    #     return Review.objects.create(**validated_data)
 
     class Meta:
         model = Review
@@ -199,16 +186,9 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-
-    def create(self, validated_data):
-        review_id = self.context.get('view').kwargs.get('review_id')
-        try:
-            validated_data['review'] = Comment.objects.get(pk=review_id)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError('Введите корректный review')
-        return Comment.objects.create(**validated_data)
+    review = serializers.HiddenField(default=CustomReview())
 
     class Meta:
         model = Comment
-        exclude = ('review',)
+        fields = '__all__'
         read_only_fields = ('id', 'author', 'pub_date')
