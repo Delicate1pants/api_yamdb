@@ -158,7 +158,7 @@ class ReviewViewSet(CustomModelViewSet):
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
-        title_id = self.kwargs.get("title_id")
+        title_id = self.kwargs.get('title_id')
         get_object_or_404(Title, pk=title_id)
         new_queryset = Review.objects.filter(title=title_id)
         return new_queryset
@@ -170,7 +170,7 @@ class CommentViewSet(CustomModelViewSet):
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
-        review_id = self.kwargs.get("review_id")
+        review_id = self.kwargs.get('review_id')
         get_object_or_404(Review, pk=review_id)
         new_queryset = Comment.objects.filter(review=review_id)
         return new_queryset

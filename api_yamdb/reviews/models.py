@@ -84,7 +84,7 @@ class Title(models.Model):
     name = models.TextField(max_length=100)
     year = models.IntegerField()
     rating = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(10)], null=True
+        validators=[MinValueValidator(1), MaxValueValidator(10)], null=True
     )
     description = models.TextField(max_length=200, null=True, blank=True)
     genre = models.ManyToManyField(Genre)
@@ -105,9 +105,7 @@ class Review(models.Model):
         User, on_delete=models.CASCADE, related_name='reviews'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
-    score = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(10)]
-    )
+    score = models.IntegerField()
     text = models.TextField()
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
