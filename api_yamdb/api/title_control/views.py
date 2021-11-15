@@ -22,7 +22,8 @@ from .serializers import (AuthenticationSerializer, CategorySerializer,
                           TitleReadSerializer, TitleWriteSerializer,
                           UserpatchSerializer, UserpostSerializer,
                           UserSerializer)
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.title_control.models import (Category, Comment, Genre, Review,
+                                          Title, User)
 
 
 class TokenGenerator(PasswordResetTokenGenerator):

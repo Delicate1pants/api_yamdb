@@ -3,7 +3,8 @@ from django.http import Http404
 from rest_framework import fields, serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.title_control.models import (Category, Comment, Genre, Review,
+                                          Title, User)
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
