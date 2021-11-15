@@ -147,7 +147,3 @@ dmypy.json
 
 # папки со статикой и медиа
 media/
-
-# папки для мерджа
-**/titles_control
-**/user_control

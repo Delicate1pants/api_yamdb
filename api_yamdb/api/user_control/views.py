@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .filters import TitleFilter
 from .permissions import (HasAccessOrReadOnly, IsAdmin, IsAdminOrReadOnly,
                           IsOwnerOrStaff)
 from .serializers import (AuthenticationSerializer, CategorySerializer,
@@ -22,7 +21,9 @@ from .serializers import (AuthenticationSerializer, CategorySerializer,
                           TitleReadSerializer, TitleWriteSerializer,
                           UserpatchSerializer, UserpostSerializer,
                           UserSerializer)
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from api.filters import TitleFilter
+from reviews.user_control.models import (Category, Comment, Genre, Review,
+                                         Title, User)
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
