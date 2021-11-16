@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
+from .mixins import CustomModelViewSet
 from .permissions import (HasAccessOrReadOnly, IsAdmin, IsAdminOrReadOnly,
                           IsOwnerOrStaff)
 from .serializers import (AuthenticationSerializer, CategorySerializer,
@@ -109,8 +110,6 @@ class UserViewSet(viewsets.ModelViewSet):
             raise Exception('Not implemented')
 
 
-# Обновлённые автотесты заставляют вставить лишние миксины:
-# RetrieveModelMixin и UpdateModelMixin
 class CategoryViewSet(
     mixins.ListModelMixin, mixins.CreateModelMixin,
     mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -149,13 +148,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleReadSerializer
         return TitleWriteSerializer
-
-
-class CustomModelViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'patch', 'delete']
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
 
 class ReviewViewSet(CustomModelViewSet):

@@ -1,8 +1,7 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
-from rest_framework import fields, serializers
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from .fields import CustomReview, CustomTitle
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -31,10 +30,6 @@ class AuthenticationSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(
-        choices=['admin', 'moderator', 'user'],
-        required=False
-    )
 
     class Meta:
         model = User
@@ -71,14 +66,14 @@ class UserpatchSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        exclude = ('id',)
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        exclude = ('id',)
         model = Genre
 
 
@@ -99,49 +94,10 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field='slug'
     )
-    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
         model = Title
-
-
-class CustomTitle(fields.CurrentUserDefault):
-    requires_context = True
-
-    def __call__(self, serializer_field):
-        view = serializer_field.context.get('view')
-        title_id = view.kwargs.get('title_id')
-        try:
-            title = Title.objects.get(pk=title_id)
-        except ObjectDoesNotExist:
-            raise Http404(
-                'Объект не найден. '
-                'Проверьте правильность написания PATH PARAMETER: review_id'
-            )
-        return title
-
-
-class CustomReview(CustomTitle):
-    def __call__(self, serializer_field):
-        view = serializer_field.context.get('view')
-        title_id = view.kwargs.get('title_id')
-        review_id = view.kwargs.get('review_id')
-        try:
-            Title.objects.get(pk=title_id)
-        except ObjectDoesNotExist:
-            raise Http404(
-                'Объект не найден. '
-                'Проверьте правильность написания PATH PARAMETER: title_id'
-            )
-        try:
-            review = Review.objects.get(pk=review_id)
-        except ObjectDoesNotExist:
-            raise Http404(
-                'Объект не найден. '
-                'Проверьте правильность написания PATH PARAMETER: review_id'
-            )
-        return review
 
 
 class ReviewSerializer(serializers.ModelSerializer):

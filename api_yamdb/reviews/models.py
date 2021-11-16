@@ -94,11 +94,14 @@ class Title(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviewer'
+        User, on_delete=models.CASCADE, related_name='reviews'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=[
+            MinValueValidator(1, 'Pass integer value from 1 to 10'),
+            MaxValueValidator(10, 'Pass integer value from 1 to 10')
+        ]
     )
     text = models.TextField()
     title = models.ForeignKey(
@@ -106,6 +109,7 @@ class Review(models.Model):
     )
 
     class Meta:
+        ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
