@@ -4,6 +4,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from api.title_control.validators import my_year_validator
 
 class UserManager(BaseUserManager):
 
@@ -77,7 +78,11 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.TextField(max_length=100)
-    year = models.IntegerField()
+    year = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[my_year_validator, ]
+    )
     description = models.TextField(max_length=200, null=True, blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
