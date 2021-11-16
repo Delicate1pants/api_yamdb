@@ -1,8 +1,8 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django.utils import six
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
@@ -11,8 +11,9 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 
+
+from .authentication import TokenGenerator, get_access_tokens_for_user
 from .filters import TitleFilter
 from .mixins import CustomModelViewSet
 from .permissions import (HasAccessOrReadOnly, IsAdmin, IsAdminOrReadOnly,
@@ -23,22 +24,11 @@ from .serializers import (AuthenticationSerializer, CategorySerializer,
                           TitleReadSerializer, TitleWriteSerializer,
                           UserpatchSerializer, UserpostSerializer,
                           UserSerializer)
+from api_yamdb.settings import EMAIL_SOURCE
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
-class TokenGenerator(PasswordResetTokenGenerator):
-    def _make_hash_value(self, user, timestamp):
-        return (
-            six.text_type(user.pk) + six.text_type(timestamp)
-        )
-
-
 account_activation_token = TokenGenerator()
-
-
-def get_access_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return str(refresh.access_token)
 
 
 class RegistrationAPIView(APIView):
@@ -46,24 +36,25 @@ class RegistrationAPIView(APIView):
     serializer_class = RegistrationSerializer
 
     def post(self, request):
-        email = request.data.get('email')
-        username = request.data.get('username')
-        try:
-            user = User.objects.get(username=username)
-            resp = Response(status=status.HTTP_400_BAD_REQUEST)
-        except User.DoesNotExist:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.save()
-            resp = Response(request.data, status=status.HTTP_200_OK)
-        confirmation_code = account_activation_token.make_token(user)
-        send_mail(
-            'Confirmation code',
-            confirmation_code,
-            'from@example.com',
-            [email],
-        )
-        return resp
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            username = serializer.validated_data.get('username')
+            try:
+                user = User.objects.get(username=username)
+                resp = Response(status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                user = serializer.save()
+                resp = Response(request.data, status=status.HTTP_200_OK)
+            confirmation_code = account_activation_token.make_token(user)
+            send_mail(
+                'Confirmation code',
+                confirmation_code,
+                EMAIL_SOURCE,
+                [email],
+            )
+            return resp
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AuthenticationAPIView(APIView):
@@ -73,8 +64,8 @@ class AuthenticationAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = request.data.get('username')
-        confirmation_code = request.data.get('confirmation_code')
+        username = serializer.validated_data.get('username')
+        confirmation_code = serializer.validated_data.get('confirmation_code')
         user = get_object_or_404(User, username=username)
         if user is not None and account_activation_token.check_token(
             user=user, token=confirmation_code

@@ -30,6 +30,10 @@ class AuthenticationSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(
+        choices=['admin', 'moderator', 'user'],
+        required=False
+    )
 
     class Meta:
         model = User

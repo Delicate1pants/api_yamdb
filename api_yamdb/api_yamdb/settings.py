@@ -116,3 +116,5 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_URLS_REGEX = r'^/api/.*$'
+
+EMAIL_SOURCE = 'from@example.com'
