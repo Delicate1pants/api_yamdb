@@ -3,7 +3,6 @@ from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from model_utils import Choices
 
 
 class UserManager(BaseUserManager):
@@ -50,8 +49,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField('Last name', max_length=150, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    roles = Choices('admin', 'moderator', 'user')
-    role = models.CharField(choices=roles, default=roles.user, max_length=20)
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    USER = 'user'
+    ROLE_CHOICES = [
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
+        (USER, 'user'),
+    ]
+    role = models.CharField(
+        max_length=9,
+        choices=ROLE_CHOICES,
+        default=USER,
+    )
     bio = models.TextField('Biography', blank=True)
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']

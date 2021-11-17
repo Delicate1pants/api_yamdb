@@ -1,4 +1,3 @@
-
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -37,24 +36,23 @@ class RegistrationAPIView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data.get('email')
-            username = serializer.validated_data.get('username')
-            try:
-                user = User.objects.get(username=username)
-                resp = Response(status=status.HTTP_400_BAD_REQUEST)
-            except User.DoesNotExist:
-                user = serializer.save()
-                resp = Response(request.data, status=status.HTTP_200_OK)
-            confirmation_code = account_activation_token.make_token(user)
-            send_mail(
-                'Confirmation code',
-                confirmation_code,
-                EMAIL_SOURCE,
-                [email],
-            )
-            return resp
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data.get('email')
+        username = serializer.validated_data.get('username')
+        try:
+            user = User.objects.get(username=username)
+            resp = Response(status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            user = serializer.save()
+            resp = Response(request.data, status=status.HTTP_200_OK)
+        confirmation_code = account_activation_token.make_token(user)
+        send_mail(
+            'Confirmation code',
+            confirmation_code,
+            EMAIL_SOURCE,
+            [email],
+        )
+        return resp
 
 
 class AuthenticationAPIView(APIView):
