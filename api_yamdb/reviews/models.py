@@ -4,6 +4,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from api.validators import my_year_validator
+
 
 class UserManager(BaseUserManager):
 
@@ -37,13 +39,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text='Required. 150 characters or few. let., dig. and @/./+/-/_',
         validators=[username_validator],
-        error_messages={'unique': "A user with that username already exists", }
+        error_messages={'unique': 'A user with that username already exists', }
     )
     email = models.EmailField(
         db_index=True,
         max_length=254,
         unique=True,
-        error_messages={'unique': "A user with that email already exists", }
+        error_messages={'unique': 'A user with that email already exists', }
     )
     first_name = models.CharField('First name', max_length=30, blank=True)
     last_name = models.CharField('Last name', max_length=150, blank=True)
@@ -89,13 +91,17 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.TextField(max_length=100)
-    year = models.IntegerField()
+    year = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[my_year_validator, ]
+    )
     description = models.TextField(max_length=200, null=True, blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        related_name="titles",
+        related_name='titles',
         null=True,
         blank=True,
     )

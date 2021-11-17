@@ -4,65 +4,80 @@ from rest_framework import permissions
 class HasAccessOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
+        user = request.user
         return (
             request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-            and request.user.role in ('user', 'moderator', 'admin')
+            or user.is_authenticated
+            and user.role in (
+                user.roles.user, user.roles.moderator, user.roles.admin
+            )
         )
 
     def has_object_permission(self, request, view, obj):
+        user = request.user
         return (
             request.method in permissions.SAFE_METHODS
-            or obj.author == request.user
-            or request.user.role in ('moderator', 'admin')
+            or obj.author == user
+            or user.role in (user.roles.moderator, user.roles.admin)
         )
 
 
 class IsOwnerOrStaff(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
         user = request.user
+        if not user.is_authenticated:
+            return False
         role = user.role
-        if role in ['admin', 'moderator'] or user.is_superuser:
-            return True
-        if request.method in ['GET', 'PATCH'] and role == 'user':
-            return True
-        return False
+        return (
+            role in (user.roles.moderator, user.roles.admin)
+            or user.is_superuser
+            or request.method in ['GET', 'PATCH']
+            and role == user.roles.user
+        )
 
     def has_object_permission(self, request, view, obj):
-        role = request.user.role
-        if role == 'admin' or request.user.is_superuser:
-            return True
-        return obj == request.user
+        user = request.user
+        role = user.role
+        return (
+            role == user.roles.admin or user.is_superuser
+            or obj == user
+        )
 
 
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role == 'admin' or request.user.is_superuser:
-                return True
+        user = request.user
+        return (
+            user.is_authenticated
+            and (
+                user.role == user.roles.admin
+                or user.is_superuser
+            )
+        )
 
     def has_object_permission(self, request, view, obj):
-        if request.user.role == 'admin' or request.user.is_superuser:
-            return True
-        return False
+        user = request.user
+        return (
+            user.role == user.roles.admin
+            or user.is_superuser
+        )
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
+        user = request.user
         return (
             request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-            and request.user.role == 'admin'
+            or user.is_authenticated
+            and user.role == user.roles.admin
         )
 
     def has_object_permission(self, request, view, obj):
+        user = request.user
         return (
             request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-            and request.user.role == 'admin'
+            or user.role == user.roles.admin
         )

@@ -69,7 +69,7 @@ class AuthenticationAPIView(APIView):
             user=user, token=confirmation_code
         ):
             token = get_access_tokens_for_user(user)
-            return Response({"token": token})
+            return Response({'token': token})
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -106,11 +106,11 @@ class CategoryViewSet(
 ):
     queryset = Category.objects.all()
     pagination_class = PageNumberPagination
-    lookup_field = "slug"
+    lookup_field = 'slug'
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [SearchFilter]
-    search_fields = ("name",)
+    search_fields = ('name',)
 
 
 class GenreViewSet(

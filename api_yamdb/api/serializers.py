@@ -30,10 +30,6 @@ class AuthenticationSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(
-        choices=['admin', 'moderator', 'user'],
-        required=False
-    )
 
     class Meta:
         model = User
@@ -53,7 +49,7 @@ class UserpostSerializer(serializers.ModelSerializer):
     def validate(self, data):
         role = data.get('role')
         if role is None:
-            data["role"] = 'user'
+            data['role'] = 'user'
         return data
 
 
