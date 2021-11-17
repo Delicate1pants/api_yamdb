@@ -1,9 +1,9 @@
-import datetime as dt
+from django.utils import timezone
 
 from django.core.exceptions import ValidationError
 
 
-def my_year_validator(value):
-    if value > dt.datetime.now().year:
+def year_validator(value):
+    if value > timezone.now().year:
         raise ValidationError(('%(value)s is not a correct year!'),
                               params={'value': value},)
