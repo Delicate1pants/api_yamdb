@@ -1,7 +1,6 @@
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
@@ -10,7 +9,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 
 from .authentication import TokenGenerator, get_access_tokens_for_user
 from .filters import TitleFilter
@@ -25,7 +23,6 @@ from .serializers import (AuthenticationSerializer, CategorySerializer,
                           UserSerializer)
 from api_yamdb.settings import EMAIL_SOURCE
 from reviews.models import Category, Comment, Genre, Review, Title, User
-
 
 account_activation_token = TokenGenerator()
 
@@ -101,7 +98,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class CategoryViewSet(
     mixins.ListModelMixin, mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     queryset = Category.objects.all()
