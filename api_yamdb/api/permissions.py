@@ -9,7 +9,7 @@ class HasAccessOrReadOnly(permissions.BasePermission):
             request.method in permissions.SAFE_METHODS
             or user.is_authenticated
             and user.role in (
-                user.roles.user, user.roles.moderator, user.roles.admin
+                user.USER, user.MODERATOR, user.ADMIN
             )
         )
 
@@ -18,7 +18,7 @@ class HasAccessOrReadOnly(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or obj.author == user
-            or user.role in (user.roles.moderator, user.roles.admin)
+            or user.role in (user.MODERATOR, user.ADMIN)
         )
 
 
@@ -30,17 +30,17 @@ class IsOwnerOrStaff(permissions.BasePermission):
             return False
         role = user.role
         return (
-            role in (user.roles.moderator, user.roles.admin)
+            role in (user.MODERATOR, user.ADMIN)
             or user.is_superuser
             or request.method in ['GET', 'PATCH']
-            and role == user.roles.user
+            and role == user.USER
         )
 
     def has_object_permission(self, request, view, obj):
         user = request.user
         role = user.role
         return (
-            role == user.roles.admin or user.is_superuser
+            role == user.ADMIN or user.is_superuser
             or obj == user
         )
 
@@ -52,7 +52,7 @@ class IsAdmin(permissions.BasePermission):
         return (
             user.is_authenticated
             and (
-                user.role == user.roles.admin
+                user.role == user.ADMIN
                 or user.is_superuser
             )
         )
@@ -60,7 +60,7 @@ class IsAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         return (
-            user.role == user.roles.admin
+            user.role == user.ADMIN
             or user.is_superuser
         )
 
@@ -72,12 +72,12 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or user.is_authenticated
-            and user.role == user.roles.admin
+            and user.role == user.ADMIN
         )
 
     def has_object_permission(self, request, view, obj):
         user = request.user
         return (
             request.method in permissions.SAFE_METHODS
-            or user.role == user.roles.admin
+            or user.role == user.ADMIN
         )
